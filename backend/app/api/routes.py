@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 from fastapi import APIRouter, HTTPException, Depends
@@ -258,10 +258,26 @@ def get_policies():
 def update_policies(policy: DetectionPolicy):
     return update_policy(policy)
 
+@router.post("/chat/protected", response_model=ChatResponse)
+def chat_protected_alias(req: ChatRequest):
+    req.protected = True
+    return chat_pipeline(req)
+
+@router.post("/chat/unprotected", response_model=ChatResponse)
+def chat_unprotected_alias(req: ChatRequest):
+    req.protected = False
+    return chat_pipeline(req)
+
+@router.post("/tools/execute", response_model=ToolCheckResult)
+def execute_tool_alias(req: ToolCheckRequest):
+    return evaluate_tool_request(req)
+
 @router.post("/demo/reset")
+@router.post("/reset")
 def reset_demo():
     reset_db_events()
     # Re-seed initial events
     from seed import seed_demo_data
     seed_demo_data()
     return {"status": "SUCCESS", "message": "Demo data reset successfully"}
+

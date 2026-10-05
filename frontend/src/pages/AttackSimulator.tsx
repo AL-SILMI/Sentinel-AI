@@ -1,19 +1,14 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { sendChatMessage, checkToolPermission } from '../services/api';
 import { RiskMeter } from '../components/RiskMeter';
 import { SeverityBadge, ActionBadge } from '../components/StatusBadge';
 import {
   Zap,
-  ShieldAlert,
-  ShieldCheck,
   Terminal,
   Play,
   CheckCircle2,
   XCircle,
-  FileCode,
-  Lock,
-  ArrowRight,
-  Database
+  ArrowRight
 } from 'lucide-react';
 
 interface AttackScenario {
@@ -31,7 +26,6 @@ interface AttackScenario {
 }
 
 export const AttackSimulator: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('all');
   const [simulatingId, setSimulatingId] = useState<string | null>(null);
   const [simulationResult, setSimulationResult] = useState<any | null>(null);
 

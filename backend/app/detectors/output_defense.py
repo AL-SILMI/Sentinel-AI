@@ -1,14 +1,15 @@
-﻿import re
+import re
 from typing import List, Dict, Tuple
 from app.schemas import OutputAnalysisResult, ThreatCategory, SecurityAction, SeverityLevel
 from app.policies.engine import get_current_policy
 
 # Regex patterns for secrets & PII
 SECRET_PATTERNS = [
-    (r"sk-[a-zA-Z0-9_-]{20,}", "OpenAI API Key"),
+    (r"sk-[a-zA-Z0-9_-]{10,}", "OpenAI API Key"),
     (r"AKIA[0-9A-Z]{16}", "AWS Access Key"),
     (r"ghp_[a-zA-Z0-9]{36}", "GitHub Personal Token"),
     (r"ey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}", "JWT Secret / Token"),
+    (r"Bearer\s+[a-zA-Z0-9_\-\.]{15,}", "Bearer Token"),
     (r"(?:api[_-]?key|secret[_-]?key|password|credential)[\s:=]+['\"]?([a-zA-Z0-9_!@#$%^&*]{8,})['\"]?", "Hardcoded Secret / Password")
 ]
 

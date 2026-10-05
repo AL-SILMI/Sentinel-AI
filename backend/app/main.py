@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.routes import router as api_router
@@ -32,3 +32,18 @@ def root():
         "event": "AURA-7.2 — CRYPTAURA 2.0",
         "status": "OPERATIONAL"
     }
+
+@app.get("/health")
+def root_health():
+    return {
+        "status": "online",
+        "service": "SentinelAI Security Middleware",
+        "version": settings.VERSION,
+        "layers": {
+            "inputDefense": "ACTIVE",
+            "outputDefense": "ACTIVE",
+            "actionDefense": "ACTIVE",
+            "auditLogging": "ACTIVE"
+        }
+    }
+

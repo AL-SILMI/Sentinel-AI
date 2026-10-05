@@ -1,4 +1,4 @@
-﻿import re
+import re
 import base64
 from typing import List, Dict, Any
 from app.schemas import InputAnalysisResult, ThreatCategory, UserRole, SecurityAction, SeverityLevel
@@ -9,7 +9,7 @@ from app.detectors.risk_engine import calculate_risk
 DIRECT_INJECTION_PATTERNS = [
     r"ignore\s+(all\s+)?(previous|prior|above)\s+instructions",
     r"disregard\s+(all\s+)?(previous|prior|above)\s+instructions",
-    r"forget\s+(all\s+)?(your\s+)?instructions",
+    r"forget\s+(all\s+)?(your\s+)?(previous\s+)?instructions",
     r"reveal\s+(your\s+)?(system\s+prompt|system\s+instructions|initial\s+prompt)",
     r"show\s+(your\s+)?(system\s+prompt|system\s+instructions|hidden\s+prompt)",
     r"print\s+(your\s+)?(system\s+prompt|system\s+instructions)",
@@ -30,7 +30,8 @@ ROLE_OVERRIDE_PATTERNS = [
     r"act\s+as\s+an\s+unfiltered\s+ai",
     r"pretend\s+you\s+have\s+no\s+rules",
     r"switch\s+to\s+admin\s+mode",
-    r"assume\s+the\s+identity\s+of"
+    r"assume\s+the\s+identity\s+of",
+    r"ignore\s+all\s+previous\s+restrictions"
 ]
 
 DATA_EXFILTRATION_PATTERNS = [
@@ -41,7 +42,8 @@ DATA_EXFILTRATION_PATTERNS = [
     r"provide\s+(admin\s+)?credentials",
     r"confidential\s+information",
     r"internal\s+policy",
-    r"export\s+all\s+(users|records|passwords)"
+    r"export\s+all\s+(users|records|passwords)",
+    r"api\s+keys\s+and\s+secrets"
 ]
 
 INDIRECT_INJECTION_PATTERNS = [
@@ -61,16 +63,18 @@ TOOL_ABUSE_PATTERNS = [
     r"export_customer_data"
 ]
 
+from app.core.security import normalize_text, decode_leetspeak
+
 def check_obfuscation(text: str) -> List[str]:
     signals = []
     # 1. Base64 detection
-    b64_pattern = r"(?:[A-Za-z0-9+/]{4}){6,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?"
+    b64_pattern = r"(?:[A-Za-z0-9+/]{4}){4,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?"
     matches = re.findall(b64_pattern, text)
     for m in matches:
-        if len(m) > 20:
+        if len(m) >= 16:
             try:
                 decoded = base64.b64decode(m).decode("utf-8", errors="ignore")
-                if any(w in decoded.lower() for w in ["ignore", "prompt", "admin", "system", "key", "password"]):
+                if any(w in decoded.lower() for w in ["ignore", "prompt", "admin", "system", "key", "password", "secret", "instructions"]):
                     signals.append(f"base64_encoded_payload: '{decoded[:30]}...'")
             except Exception:
                 pass
@@ -80,10 +84,9 @@ def check_obfuscation(text: str) -> List[str]:
     if spaced_match:
         signals.append("character_spacing_evasion")
 
-    # 3. Leetspeak / unicode substitutions
-    leetspeak_map = {"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s"}
-    normalized = "".join(leetspeak_map.get(c, c) for c in text.lower())
-    if "ignore previous instructions" in normalized and "ignore previous instructions" not in text.lower():
+    # 3. Leetspeak / character substitutions
+    normalized_leet = decode_leetspeak(text)
+    if ("ignore previous instructions" in normalized_leet or "reveal system prompt" in normalized_leet) and ("ignore previous instructions" not in text.lower()):
         signals.append("leetspeak_obfuscation")
 
     return signals
@@ -94,12 +97,16 @@ def analyze_input(message: str, user_role: UserRole = UserRole.CUSTOMER) -> Inpu
     categories: List[str] = []
     matched_patterns: List[str] = []
     
-    msg_lower = message.lower()
+    # Normalize input (strip zero-width characters, collapse spacing)
+    normalized_msg = normalize_text(message)
+    msg_lower = normalized_msg.lower()
+    leet_msg = decode_leetspeak(normalized_msg).lower()
+
 
     # Direct Injection
     if policy.promptInjection:
         for p in DIRECT_INJECTION_PATTERNS:
-            if re.search(p, msg_lower):
+            if re.search(p, msg_lower) or re.search(p, leet_msg):
                 signals.append("direct_instruction_override")
                 categories.append(ThreatCategory.DIRECT_PROMPT_INJECTION.value)
                 matched_patterns.append(p)
@@ -108,7 +115,7 @@ def analyze_input(message: str, user_role: UserRole = UserRole.CUSTOMER) -> Inpu
     # Role Override
     if policy.roleOverride:
         for p in ROLE_OVERRIDE_PATTERNS:
-            if re.search(p, msg_lower):
+            if re.search(p, msg_lower) or re.search(p, leet_msg):
                 signals.append("role_manipulation")
                 categories.append(ThreatCategory.ROLE_OVERRIDE.value)
                 matched_patterns.append(p)
@@ -117,7 +124,7 @@ def analyze_input(message: str, user_role: UserRole = UserRole.CUSTOMER) -> Inpu
     # Data Exfiltration
     if policy.dataExfiltration:
         for p in DATA_EXFILTRATION_PATTERNS:
-            if re.search(p, msg_lower):
+            if re.search(p, msg_lower) or re.search(p, leet_msg):
                 signals.append("sensitive_data_request")
                 categories.append(ThreatCategory.DATA_EXFILTRATION.value)
                 matched_patterns.append(p)
@@ -125,7 +132,7 @@ def analyze_input(message: str, user_role: UserRole = UserRole.CUSTOMER) -> Inpu
 
     # Indirect Injection
     for p in INDIRECT_INJECTION_PATTERNS:
-        if re.search(p, msg_lower):
+        if re.search(p, msg_lower) or re.search(p, leet_msg):
             signals.append("indirect_injection")
             categories.append(ThreatCategory.INDIRECT_INJECTION.value)
             matched_patterns.append(p)
@@ -134,7 +141,7 @@ def analyze_input(message: str, user_role: UserRole = UserRole.CUSTOMER) -> Inpu
     # Tool Abuse
     if policy.toolEnforcement:
         for p in TOOL_ABUSE_PATTERNS:
-            if re.search(p, msg_lower):
+            if re.search(p, msg_lower) or re.search(p, leet_msg):
                 signals.append("tool_manipulation")
                 categories.append(ThreatCategory.TOOL_ABUSE.value)
                 matched_patterns.append(p)

@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, ChatResponse } from '../types';
 import { sendChatMessage } from '../services/api';
 import { RiskMeter } from '../components/RiskMeter';
@@ -13,10 +13,7 @@ import {
   Cpu,
   Lock,
   Terminal,
-  RotateCcw,
-  Sparkles,
-  CheckCircle2,
-  XCircle
+  RotateCcw
 } from 'lucide-react';
 
 interface ChatMessage {
@@ -226,6 +223,33 @@ export const ProtectedChat: React.FC = () => {
                   </div>
                 )}
 
+                {/* Sanitized Alert Badge */}
+                {!msg.isBlocked && msg.responseMeta?.outputDefense?.sanitized && (
+                  <div className="space-y-1.5 mb-2.5 pb-2.5 border-b border-amber-900/60 font-mono text-xs">
+                    <div className="flex items-center justify-between text-amber-400 font-bold">
+                      <span className="flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5" />
+                        OUTPUT DEFENSE: SANITIZED
+                      </span>
+                      <SeverityBadge severity={msg.responseMeta.outputDefense.severity} />
+                    </div>
+                    <div className="text-[11px] text-amber-300/80">
+                      Sensitive credentials / PII detected and replaced with [REDACTED BY SENTINELAI].
+                    </div>
+                  </div>
+                )}
+
+                {/* Safe Allowed Badge */}
+                {!msg.isBlocked && msg.responseMeta?.protected && !msg.responseMeta?.outputDefense?.sanitized && msg.sender === 'bot' && (
+                  <div className="mb-2 pb-1.5 border-b border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-emerald-400">
+                    <span className="flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" />
+                      SENTINELAI: ALLOWED
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">Risk: {msg.responseMeta.inputDefense?.riskScore ?? 0}/100</span>
+                  </div>
+                )}
+
                 {/* Message Body */}
                 <div className="whitespace-pre-wrap">{msg.text}</div>
 
@@ -387,8 +411,24 @@ export const ProtectedChat: React.FC = () => {
             </div>
           </div>
 
+          {/* Inspection Pipeline Trace */}
+          <div className="mt-5 p-3 rounded-xl bg-black/40 border border-slate-800 space-y-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Inspection Flow</span>
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+              <span className="text-slate-300">USER</span>
+              <span>&rarr;</span>
+              <span className="text-cyan-400">INPUT</span>
+              <span>&rarr;</span>
+              <span className="text-amber-400">RISK</span>
+              <span>&rarr;</span>
+              <span className="text-blue-400">LLM</span>
+              <span>&rarr;</span>
+              <span className="text-emerald-400">OUTPUT</span>
+            </div>
+          </div>
+
           {/* Current Request Diagnostics */}
-          <div className="mt-6 pt-5 border-t border-slate-800">
+          <div className="mt-5 pt-4 border-t border-slate-800">
             <span className="text-xs font-mono uppercase text-slate-400 block mb-3">Latest Request Telemetry</span>
 
             {latestSecurityMeta ? (
@@ -420,6 +460,23 @@ export const ProtectedChat: React.FC = () => {
                     <span className="text-xs font-mono text-slate-500">None (Safe request)</span>
                   )}
                 </div>
+
+                {/* Output Defense inspection scan */}
+                {latestSecurityMeta.outputDefense && (
+                  <div className="p-2.5 rounded bg-black/60 border border-slate-800 space-y-1.5 text-xs font-mono">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 uppercase text-[10px]">OUTPUT DEFENSE:</span>
+                      <span className={latestSecurityMeta.outputDefense.sanitized ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold'}>
+                        {latestSecurityMeta.outputDefense.sanitized ? 'SANITIZED' : 'CLEAN'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-300">
+                      {latestSecurityMeta.outputDefense.sanitized
+                        ? `Scanned & detected ${latestSecurityMeta.outputDefense.detectedItems?.length || 1} sensitive item(s).`
+                        : 'Scanned: Zero sensitive PII or credentials detected.'}
+                    </div>
+                  </div>
+                )}
 
                 {/* Explanation */}
                 <div className="p-2.5 rounded bg-black/40 border border-slate-800/80 text-[11px] font-mono text-slate-300">

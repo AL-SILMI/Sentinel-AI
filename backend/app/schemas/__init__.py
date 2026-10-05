@@ -1,4 +1,4 @@
-﻿from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from enum import Enum
 
@@ -128,7 +128,7 @@ class DetectionPolicy(BaseModel):
     piiDetection: bool = True
     toolEnforcement: bool = True
     obfuscationDetection: bool = True
-    lowThreshold: int = 30
-    mediumThreshold: int = 60
-    highThreshold: int = 80
-    criticalThreshold: int = 90
+    lowThreshold: int = 21
+    mediumThreshold: int = 41
+    highThreshold: int = 61
+    criticalThreshold: int = 81

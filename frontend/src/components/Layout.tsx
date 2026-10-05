@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -9,7 +9,6 @@ import {
   Sliders,
   Network,
   RotateCcw,
-  CheckCircle2,
   AlertTriangle
 } from 'lucide-react';
 import { resetDemo } from '../services/api';

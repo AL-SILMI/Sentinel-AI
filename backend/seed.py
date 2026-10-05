@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import os
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -92,6 +92,23 @@ def seed_demo_data():
             "tool_name": None,
             "signals": '["OpenAI API Key"]',
             "metadata": '{"redactedType": "API_KEY"}'
+        },
+        {
+            "id": f"EVT-{uuid.uuid4().hex[:8].upper()}",
+            "timestamp": (now - timedelta(minutes=28)).isoformat(),
+            "request_id": "REQ-5C71D8",
+            "event_type": "TOOL_CHECK",
+            "layer": DefenseLayer.ACTION.value,
+            "category": "TOOL_EXECUTION",
+            "severity": SeverityLevel.SAFE.value,
+            "risk_score": 10,
+            "input_summary": "Tool call: get_order_status (Args: {'orderId': 'ORD-10231'})",
+            "decision": SecurityAction.ALLOW.value,
+            "reason": "Action Defense authorized: User role CUSTOMER fulfills scope for get_order_status.",
+            "user_role": UserRole.CUSTOMER.value,
+            "tool_name": "get_order_status",
+            "signals": '[]',
+            "metadata": '{"orderId": "ORD-10231", "carrier": "BlueDart Express"}'
         },
         {
             "id": f"EVT-{uuid.uuid4().hex[:8].upper()}",

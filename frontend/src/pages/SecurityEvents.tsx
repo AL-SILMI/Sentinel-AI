@@ -1,16 +1,13 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SecurityEvent } from '../types';
 import { fetchSecurityEvents } from '../services/api';
 import { SeverityBadge, ActionBadge } from '../components/StatusBadge';
 import { EventDetailModal } from '../components/EventDetailModal';
 import {
   History,
-  Filter,
   Search,
   ExternalLink,
-  RefreshCw,
-  Download,
-  ShieldAlert
+  RefreshCw
 } from 'lucide-react';
 
 export const SecurityEvents: React.FC = () => {
@@ -72,7 +69,7 @@ export const SecurityEvents: React.FC = () => {
             onClick={loadEvents}
             className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono flex items-center space-x-2 border border-slate-700 transition"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh Logs</span>
           </button>
         </div>

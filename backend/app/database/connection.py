@@ -1,4 +1,4 @@
-﻿import sqlite3
+import sqlite3
 import json
 import os
 from typing import List, Dict, Any, Optional
@@ -54,10 +54,10 @@ def init_db():
             "piiDetection": True,
             "toolEnforcement": True,
             "obfuscationDetection": True,
-            "lowThreshold": 30,
-            "mediumThreshold": 60,
-            "highThreshold": 80,
-            "criticalThreshold": 90
+            "lowThreshold": 21,
+            "mediumThreshold": 41,
+            "highThreshold": 61,
+            "criticalThreshold": 81
         }
         cursor.execute("INSERT INTO policies (id, policy_json) VALUES (1, ?)", (json.dumps(default_policy),))
         

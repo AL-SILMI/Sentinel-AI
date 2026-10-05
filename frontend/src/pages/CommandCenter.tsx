@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AggregateStats, SecurityEvent } from '../types';
 import { fetchStats, fetchSecurityEvents } from '../services/api';
 import { SeverityBadge, ActionBadge } from '../components/StatusBadge';
@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   Cpu,
   Lock,
-  Flame,
   Radio,
   ExternalLink,
   RefreshCw,
@@ -35,6 +34,7 @@ export const CommandCenter: React.FC = () => {
 
   const loadData = async () => {
     try {
+      setLoading(true);
       const [s, evts] = await Promise.all([fetchStats(), fetchSecurityEvents(6)]);
       setStats(s);
       setRecentEvents(evts);
@@ -97,7 +97,7 @@ export const CommandCenter: React.FC = () => {
             className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition"
             title="Refresh metrics"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>

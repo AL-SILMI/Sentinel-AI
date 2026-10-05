@@ -1,8 +1,8 @@
-﻿import React from 'react';
+import React from 'react';
 import { SecurityEvent } from '../types';
 import { SeverityBadge, ActionBadge } from './StatusBadge';
 import { RiskMeter } from './RiskMeter';
-import { X, ShieldAlert, Cpu, Terminal, ArrowRight, CheckCircle2, AlertOctagon } from 'lucide-react';
+import { X, ShieldAlert, Cpu, Terminal, ArrowRight, AlertOctagon } from 'lucide-react';
 
 interface EventDetailModalProps {
   event: SecurityEvent | null;

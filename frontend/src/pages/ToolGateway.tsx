@@ -1,19 +1,15 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { UserRole } from '../types';
 import { checkToolPermission } from '../services/api';
-import { SeverityBadge, ActionBadge } from '../components/StatusBadge';
+import { ActionBadge } from '../components/StatusBadge';
 import {
   Cpu,
-  ShieldCheck,
-  ShieldAlert,
   Play,
   CheckCircle2,
   XCircle,
-  Lock,
   ArrowRight,
   Database,
-  Terminal,
-  UserCheck
+  Terminal
 } from 'lucide-react';
 
 interface ToolDefinition {

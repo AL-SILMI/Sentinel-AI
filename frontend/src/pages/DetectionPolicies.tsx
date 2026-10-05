@@ -1,13 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DetectionPolicy } from '../types';
 import { fetchPolicies, updatePolicies } from '../services/api';
 import {
   Sliders,
-  ShieldCheck,
   Save,
-  CheckCircle2,
-  AlertTriangle,
-  RotateCcw
+  CheckCircle2
 } from 'lucide-react';
 
 export const DetectionPolicies: React.FC = () => {

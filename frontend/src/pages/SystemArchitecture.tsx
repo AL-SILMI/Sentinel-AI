@@ -1,16 +1,12 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   Network,
-  ShieldCheck,
   Cpu,
   Lock,
   Terminal,
   ArrowRight,
-  Database,
   History,
   CheckCircle2,
-  AlertTriangle,
-  Layers,
   Sparkles
 } from 'lucide-react';
 
